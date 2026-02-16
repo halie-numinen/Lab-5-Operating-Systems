@@ -9,22 +9,54 @@
 
 #define SIZE 4096
 
+volatile sig_atomic_t programRunning = 1;
+
+void handleSigint(int sig) {
+    if (sig == SIGINT) {
+        programRunning = 0;
+    }
+}
+
 int main() {
     key_t key;
     int shmId;
-    const char* path = "."
+    const char* path = ".";
     int projId = 'S';
     key = ftok(path, projId);
-    // char *sharedMemoryPtr;
+    char *sharedMemoryPtr;
     char userString[500];
+
+    if (key == -1) {
+        perror("ftok failed");
+        exit(1);
+    }
 
     if ((shmId = shmget(key, SIZE, IPC_CREAT|S_IRUSR|S_IWUSR)) < 0) {
         perror("Unable to get shared memory\n");
         exit(1);
     }
-    while (userString != "quit") {
+
+    signal(SIGINT, handleSigint);
+    if ((sharedMemoryPtr = shmat(shmId, 0, 0)) == (void*) -1) {
+        perror("Unable to attach\n");
+        exit(1);
+    }
+
+    while (programRunning != 0) {
         printf("Enter the string: ");
         fgets(userString, 500, stdin);
+        if (userString != "quit"){
+            exit(1); // for now
+        }
+        
+    }
+    if (shmdt(sharedMemoryPtr) < 0) {
+        perror("Unable to detach\n");
+        exit(1);
+    }
+    if (shmctl(shmId, IPC_RMID, 0) < 0) {
+        perror("Unable to deallocate\n");
+        exit(0);
     }
     return 0;
 }

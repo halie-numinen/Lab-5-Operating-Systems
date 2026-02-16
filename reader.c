@@ -16,9 +16,6 @@ int main() {
         perror("Unable to detach\n");
         exit(1);
     }
-    if (shmctl(shmId, IPC_RMID, 0) < 0) {
-        perror("Unable to deallocate\n");
-        exit(0);
-    }
+    
     return 0;
 }

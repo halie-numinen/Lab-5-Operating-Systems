@@ -11,7 +11,7 @@
 
 volatile sig_atomic_t programRunning = 1;
 
-void handleSigint(int sig) {
+void handleSigint(int sig) { // helpes with garaceful shutdown
     if (sig == SIGINT) {
         programRunning = 0;
     }
@@ -37,17 +37,17 @@ int main() {
     }
 
     signal(SIGINT, handleSigint);
-    if ((sharedMemoryPtr = shmat(shmId, 0, 0)) == (void*) -1) {
+    if ((sharedMemoryPtr = shmat(shmId, 0, 0)) == (void*) -1) { // Need to cordinate with readers somehow
         perror("Unable to attach\n");
         exit(1);
     }
 
     while (programRunning != 0) {
         printf("Enter the string: ");
-        fgets(userString, 500, stdin);
-        if (userString != "quit"){
+        fgets(userString, 500, stdin); // this needs to be added to shared memory
+        if (userString == "quit") { // This needs to be fixed
             exit(1); // for now
-        }
+        } // Also needs to account for EOF and then tell the readers that we are shutting down (gracefully)
         
     }
     if (shmdt(sharedMemoryPtr) < 0) {

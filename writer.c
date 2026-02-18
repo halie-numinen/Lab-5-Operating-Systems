@@ -10,6 +10,7 @@
 #define SIZE 4096
 
 volatile sig_atomic_t programRunning = 1;
+volatile int turns = 0; // writer is 0 and reader is 1
 
 void handleSigint(int sig) { // helpes with garaceful shutdown
     if (sig == SIGINT) {
@@ -42,19 +43,21 @@ int main() {
         exit(1);
     }
 
-    for (int i = 0; i <= sizeof(userString); i++) {
-        sharedMemoryPtr[i] = userString[i];
-    }
-
     while (programRunning != 0) {
         printf("Enter the string: ");
         fgets(userString, 500, stdin); // this needs to be added to shared memory
-        if (userString == "quit") { // This needs to be fixed
+        if (strcmp(userString, "quit") == 0) { // This needs to be fixed
             signal(SIGINT, handleSigint);
             // exit(1); // for now
         } // Also needs to account for EOF and then tell the readers that we are shutting down (gracefully)
         // sharedMemoryPtr = userString;
     }
+    
+    for (int i = 0; i <= strlen(userString); i++) { // also set the flag so the readed knows it is its turn
+        sharedMemoryPtr[i] = userString[i];
+    }
+    turn = 1;
+    
     if (shmdt(sharedMemoryPtr) < 0) {
         perror("Unable to detach\n");
         exit(1);

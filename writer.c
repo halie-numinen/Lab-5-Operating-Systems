@@ -46,9 +46,10 @@ int main() {
         printf("Enter the string: ");
         fgets(userString, 500, stdin); // this needs to be added to shared memory
         if (userString == "quit") { // This needs to be fixed
-            exit(1); // for now
+            signal(SIGINT, handleSigint);
+            // exit(1); // for now
         } // Also needs to account for EOF and then tell the readers that we are shutting down (gracefully)
-        
+        // sharedMemoryPtr = userString;
     }
     if (shmdt(sharedMemoryPtr) < 0) {
         perror("Unable to detach\n");

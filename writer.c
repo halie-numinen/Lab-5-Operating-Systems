@@ -42,6 +42,10 @@ int main() {
         exit(1);
     }
 
+    for (int i = 0; i <= sizeof(userString); i++) {
+        sharedMemoryPtr[i] = userString[i];
+    }
+
     while (programRunning != 0) {
         printf("Enter the string: ");
         fgets(userString, 500, stdin); // this needs to be added to shared memory

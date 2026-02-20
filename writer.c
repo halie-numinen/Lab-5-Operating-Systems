@@ -18,17 +18,20 @@ void handleSigint(int sig) { // helpes with garaceful shutdown
     }
 }
 
+struct sharedData {
+    int turns; // 0 = writer's turn, 1 = reader's turn
+    int programRunning; // 0 = running, 1 = stopping
+    int readersDone;
+    char userString[500];
+} *sharedMemoryPtr;
+
 int main() {
     key_t key;
     int shmId;
     const char* path = ".";
     int projId = 'S';
     key = ftok(path, projId);
-    struct sharedData {
-        int turns; // writer is 0 and reader is 1
-        int programRunning; // 1 is stoping 0 is running
-        char userString[500];
-    } *sharedMemoryPtr;
+
     // char userString[500];
 
     if (key == -1) {
@@ -47,25 +50,39 @@ int main() {
         exit(1);
     }
 
-    while (sharedMemoryPtr->programRunning != 1) { // fix
+    while (1) { // fix
+        while (sharedMemoryPtr->turns != 0) { // when it is the writers turn
+            if (sharedMemoryPtr->programRunning == 1) {
+                break;
+            }
+        }
+        if (sharedMemoryPtr->programRunning == 1) {
+            break;
+        }
+
         printf("Enter the string: ");
         char *ending = fgets(sharedMemoryPtr->userString, 500, stdin); 
-        sharedMemoryPtr->userString[strcspn(sharedMemoryPtr->userString, "\n")] = '\0';
-        if (strcmp(sharedMemoryPtr->userString, "quit") == 0) { // This needs to be fixed
-            // signal(SIGINT, handleSigint);
-            sharedMemoryPtr->programRunning = 1;
-            // exit(1); // for now
-        } // Also needs to account for EOF and then tell the readers that we are shutting down (gracefully)
         if (ending == NULL) {
             sharedMemoryPtr->programRunning = 1;
             sharedMemoryPtr->turns = 1;
+            break;
         }
-        if (shutdown == 0) {
+        sharedMemoryPtr->userString[strcspn(sharedMemoryPtr->userString, "\n")] = '\0';
+        
+        if (strcmp(sharedMemoryPtr->userString, "quit") == 0 || shutdown == 0) { // This needs to be fixed
             sharedMemoryPtr->programRunning = 1;
             sharedMemoryPtr->turns = 1;
-        }
+            break;
+        } 
+        
+        sharedMemoryPtr->readersDone = 0;
         sharedMemoryPtr->turns = 1;
-        // sharedMemoryPtr = userString;
+        while (sharedMemoryPtr->readersDone < 2) {
+            if (sharedMemoryPtr->programRunning == 1) {
+                break;
+            }
+        }
+        sharedMemoryPtr->turns = 0;
     }
     
     if (shmdt(sharedMemoryPtr) < 0) {

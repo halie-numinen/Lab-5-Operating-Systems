@@ -32,8 +32,6 @@ int main() {
     int projId = 'S';
     key = ftok(path, projId);
 
-    // char userString[500];
-
     if (key == -1) {
         perror("ftok failed");
         exit(1);
@@ -50,11 +48,16 @@ int main() {
         exit(1);
     }
 
-    while (1) { // fix
+    sharedMemoryPtr->turns = 0;
+    sharedMemoryPtr->programRunning = 0;
+    sharedMemoryPtr->readersDone = 0;
+
+    while (1) { 
         while (sharedMemoryPtr->turns != 0) { // when it is the writers turn
             if (sharedMemoryPtr->programRunning == 1) {
                 break;
             }
+            // sleep(1);
         }
         if (sharedMemoryPtr->programRunning == 1) {
             break;
@@ -69,7 +72,7 @@ int main() {
         }
         sharedMemoryPtr->userString[strcspn(sharedMemoryPtr->userString, "\n")] = '\0';
         
-        if (strcmp(sharedMemoryPtr->userString, "quit") == 0 || shutdown == 0) { // This needs to be fixed
+        if (strcmp(sharedMemoryPtr->userString, "quit") == 0 || shutdown == 0) { 
             sharedMemoryPtr->programRunning = 1;
             sharedMemoryPtr->turns = 1;
             break;

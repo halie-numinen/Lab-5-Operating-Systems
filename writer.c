@@ -57,7 +57,6 @@ int main() {
             if (sharedMemoryPtr->programRunning == 1) {
                 break;
             }
-            // sleep(1);
         }
         if (sharedMemoryPtr->programRunning == 1) {
             break;

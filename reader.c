@@ -16,6 +16,10 @@ int main() {
         perror("Unable to detach\n");
         exit(1);
     }
+
+    if (sharedMemoryPtr->programRunning == 1) {
+            break;
+        }
     
     return 0;
 }
